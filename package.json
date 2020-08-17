@@ -1,0 +1,21 @@
+{
+  "name": "employee_tracker",
+  "version": "1.0.0",
+  "description": "Employee Management System that uses a MySQL database",
+  "main": "server.js",
+  "scripts": {
+    "test": "npm test",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "MySQL"
+  ],
+  "author": "Nikki Rees",
+  "license": "ISC",
+  "dependencies": {
+    "asciiart-logo": "^0.2.6",
+    "console.table": "^0.10.0",
+    "inquirer": "^7.3.3",
+    "mysql": "^2.18.1"
+  }
+}
