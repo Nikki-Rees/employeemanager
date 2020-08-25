@@ -1,18 +1,21 @@
-const { prompt } = require("inquirer");
-const consoletable = require("console.table");
+const inquirer = require('inquirer');
+const emitter = require('events').EventEmitter.defaultMaxListeners = 0;
+const consoleTable = require('console.table');
 const logo = require('asciiart-logo');
+const mysql = require('mysql');
 
+const connection = mysql.createConnection({
+    host: "localhost",
+    port: 3306,
+    user: "root",
+    password: "!27ComptonRd",
+    database: "employeeManager_db"
+});
 
-// create the connection information for the sql database
-const server = require("./db/connection");
-
-const connection = server.createConnection();
-// connect to the mysql server and sql database
 connection.connect(err => {
     if (err) throw err;
-    // run the start function after the connection is made to prompt the user
     printLogo();
-
+    start();
 });
 
 const printLogo = () => {
@@ -32,15 +35,13 @@ const printLogo = () => {
         .emptyLine()
         .render()
     );
-    start();
-};
 
-
+}
 
 // function which prompts the user for what action they should take
 const start = async () => {
 
-    await prompt({
+    await inquirer.prompt({
         name: "action",
         type: "list",
         message: "Would you like to do?",
@@ -49,7 +50,7 @@ const start = async () => {
             "View departments, roles or employees",
             "Update employee role",
             "Delete department, role or employee",
-            "Quit application"
+            "Quit application",
         ]
     })
         .then(answer => {
@@ -72,17 +73,18 @@ const start = async () => {
                     break;
 
                 case "Quit application":
-                    end();
+                    quit();
                     break;
+                default: quit();
             }
         });
-};
+}
 
 
 
 const add = async () => {
 
-    await prompt({
+    await inquirer.prompt({
         name: "action",
         type: "list",
         message: "What would you like to add?",
@@ -90,7 +92,8 @@ const add = async () => {
 
             "add department",
             "add role",
-            "add employee"
+            "add employee",
+            "Quit application"
 
         ]
     })
@@ -110,14 +113,17 @@ const add = async () => {
                 case "add employee":
                     addEmployee();
                     break;
-
+                case "Quit application":
+                    quit();
+                    break;
+                default: quit();
             }
         });
-};
+}
 
 const view = async () => {
 
-    await prompt({
+    await inquirer.prompt({
         name: "action",
         type: "list",
         message: "Would you like to do?",
@@ -149,14 +155,17 @@ const view = async () => {
                 case "view all employees by department":
                     viewByDept();
                     break;
-
+                case "Quit application":
+                    quit();
+                    break;
+                default: quit();
             }
         });
-};
+}
 
 const deleteIt = async () => {
 
-    await prompt({
+    await inquirer.prompt({
         name: "action",
         type: "list",
         message: "What would you like to delete?",
@@ -165,6 +174,7 @@ const deleteIt = async () => {
             "delete a department",
             "delete a role",
             "delete an employee",
+            "Quit application"
         ]
     })
         .then(answer => {
@@ -183,31 +193,39 @@ const deleteIt = async () => {
                     deleteEmployee();
                     break;
 
+                case "Quit application":
+                    quit();
+                    break;
+                default: quit();
             }
         });
-};
+}
 // VIEW functions
 
 const viewAllDepts = () => {
     const query = `SELECT * FROM department`
     connection.query(query, (err, res) => {
         if (err) throw err;
-        console.log("");
+        console.log("============================================ \n");
         console.table(res);
-    }
-    );
-    start();
-};
+        console.log("============================================ \n");
+        start();
+    });
+
+
+}
 
 const viewAllRoles = () => {
     const query = `SELECT role.id, role.title, role.salary, name AS department FROM role INNER JOIN department ON (role.department_id = department.id)`;
     connection.query(query, (err, res) => {
         if (err) throw err;
-        console.log("");
+        console.log("============================================ \n");
         console.table(res);
+        console.log("============================================ \n");
+        start();
     });
-    start();
-};
+
+}
 
 const viewAllEmployees = () => {
     const query =
@@ -219,14 +237,16 @@ const viewAllEmployees = () => {
 
     connection.query(query, (err, res) => {
         if (err) throw err;
-        console.log("");
+        console.log("============================================ \n");
         console.table(res);
+        console.log("============================================ \n");
+        start();
     });
-    start();
+
 };
 
 const viewByDept = () => {
-    prompt([
+    inquirer.prompt([
         {
             type: "input",
             name: "deptName",
@@ -240,19 +260,21 @@ const viewByDept = () => {
     WHERE department.name=?`;
         connection.query(query, [answer.deptName], (err, res) => {
             if (err) throw err;
-            console.log("");
-            console.table(res);
 
+            console.log("============================================ \n");
+            console.table(res);
+            console.log("============================================ \n");
+            start();
         });
-        start();
-    }
-    );
+
+    });
+
 }
 
 // ADD functions
 
 const addDept = async () => {
-    await prompt([
+    await inquirer.prompt([
 
         {
             type: "input",
@@ -270,55 +292,56 @@ const addDept = async () => {
             },
             (err, res) => {
                 if (err) throw err;
-                console.log("New department added!");
-                viewAllDepts();
-
+                console.log(" New department added! \n ");
+                start();
             });
-        start();
+
     });
-};
+
+
+}
 
 const addRole = async () => {
 
-    await
-        prompt([
-            {
-                type: "input",
-                name: "title",
-                message: "Please enter role name"
-            },
-            {
-                type: "input",
-                name: "salary",
-                message: "Please enter salary for new role"
-            },
-            {
-                type: "input",
-                name: "deptID",
-                message: "Please enter the department ID"
-            },
-        ]).then(answer => {
+    await inquirer.prompt([
+        {
+            type: "input",
+            name: "title",
+            message: "Please enter role name"
+        },
+        {
+            type: "input",
+            name: "salary",
+            message: "Please enter salary for new role"
+        },
+        {
+            type: "input",
+            name: "deptID",
+            message: "Please enter the department ID"
+        },
+    ]).then(res => {
 
-            const query = `INSERT INTO role SET ?`;
+        const query = `INSERT INTO role SET ?`;
 
-            connection.query(
-                query, {
-                title: answer.title,
-                salary: answer.salary,
-                department_ID: answer.deptID
-            }, (err, res) => {
-                if (err) throw err;
-                console.log("role added!");
-                console.log(viewAllRoles);
-            });
+        connection.query(query, {
+            title: res.title,
+            salary: res.salary,
+            department_ID: res.deptID
+        }, (err, res) => {
+            if (err) throw err;
+            console.log("Role added! \n");
+            console.log("Return to main menu \n");
             start();
         });
 
-};
+    })
+
+
+}
 
 const addEmployee = async () => {
 
-    await prompt([
+    await inquirer.prompt([
 
         {
             type: "input",
@@ -353,15 +376,17 @@ const addEmployee = async () => {
             },
             (err, res) => {
                 if (err) throw err;
-                console.log(viewAllEmployees);
-                console.log("employee added!");
+                console.log("Employee added! \n");
+                console.log("Return to main menu \n");
+                start();
             });
-        start();
+
     });
-};
+
+}
 
 const updateRole = async () => {
-    await prompt([
+    await inquirer.prompt([
         {
             type: "input",
             name: "employeeID",
@@ -377,56 +402,60 @@ const updateRole = async () => {
             query, [answer.roleID, answer.employeeID],
             (err, res) => {
                 if (err) throw err;
-                console.log("role updated!");
-                console.log(viewAllEmployees);
+                console.log("Role updated! \n");
+                console.log("Return to main menu \n");
+                start();
 
             });
-        start();
-    })
+
+    });
+
 };
 
 //DELETE functions
 
 const deleteDepartment = async () => {
 
-    await prompt({
+    await inquirer.prompt({
         type: "input",
         name: "deptID",
         message: "Enter id of the department you'd like to delete"
-    }).then(answer => {
-        const query = "DELETE FROM department WHERE id = ?";
-        connection.query(query, [answer.deptID], (err, res) => {
-            if (err) throw err;
-            console.log("Employee deleted");
-            viewAllDepts();
+    })
+        .then(answer => {
+            const query = "DELETE FROM department WHERE id = ?";
+            connection.query(query, [answer.deptID], (err, res) => {
+                if (err) throw err;
+                console.log("Department deleted \n");
+                console.log("Return to main menu \n");
+                start();
+            });
+
         });
-        start();
-    });
 
 };
 
 const deleteRole = async () => {
 
-    await prompt({
+    await inquirer.prompt({
         type: "input",
         name: "roleID",
         message: "Enter id of role you'd like to delete"
-    },
-        {
-
-        }).then(answer => {
-            const query = "DELETE FROM role WHERE id = ?";
-            connection.query(query, [answer.roleID], (err, res) => {
-                if (err) throw err;
-                console.log("Role deleted");
-            });
+    }).then(answer => {
+        const query = "DELETE FROM role WHERE id = ?";
+        connection.query(query, [answer.roleID], (err, res) => {
+            if (err) throw err;
+            console.log("Role deleted \n");
+            console.log("Return to main menu \n");
             start();
         });
+
+    });
+
 };
 
 const deleteEmployee = async () => {
 
-    await prompt({
+    await inquirer.prompt({
         type: "input",
         name: "employeeID",
         message: "Enter id of employee you'd like to delete"
@@ -434,16 +463,20 @@ const deleteEmployee = async () => {
         const query = "DELETE FROM employee WHERE id = ?";
         connection.query(query, [answer.employeeID], (err, res) => {
             if (err) throw err;
-            console.log("Deleted employee");
-            viewAllEmployees();
+            console.log("Employee deleted \n");
+            console.log("Return to main menu \n");
+            start();
         });
-        start();
+
     });
 
 };
 
-
-const end = () => {
-    console.log("End connection");
-    connection.end();
-}
+const quit = () => {
+    connection.end(function (err) {
+        if (err) {
+            return console.log('error:' + err.message);
+        }
+        console.log('Close the database connection.');
+    })
+};
